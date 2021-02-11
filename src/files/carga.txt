@@ -1,0 +1,103 @@
+ protected void Button9_Click(object sender, EventArgs e)
+        {
+            if (FileUpload1.HasFile)
+            {
+                //------------------Variables temporales------------------------------
+                String filas = "", columnas = "", modalidad = "", fila = "", columna = "" , color = "";
+                int contador=0;
+                String[,] temporal;
+                Jugador jugador1 = new Jugador();
+                Jugador jugador2 = new Jugador();
+                string ruta = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                string extension = Path.GetExtension(FileUpload1.FileName);
+                extension.ToLower();
+                if (extension == ".xml")
+                {
+                    XmlReader reader = XmlReader.Create(ruta + "\\" + FileUpload1.FileName);
+                    while (reader.Read())
+                    {
+                        if (reader.IsStartElement())
+                        {
+                            switch (reader.Name.ToString().ToLower())
+                            {
+                                case "filas":
+                                    filas = reader.ReadString();
+                                    break;
+                                case "columnas":
+                                    columnas = reader.ReadString();
+                                    temporal = new String[Int16.Parse(filas), Int16.Parse(columnas)];
+                                    for (int i = 0; i < Int16.Parse(filas); i++)
+                                    {
+                                        for (int j = 0; j < Int16.Parse(columnas); j++)
+                                        {
+                                            temporal[i, j] = "X";
+                                        }
+                                    }
+                                    Session["Temporal"] = temporal;
+                                    break;
+                                case "jugador1":
+                                    jugador1.Nombre = (String)Session["username"];
+                                    contador = 1;
+                                    break;
+                                case "jugador2":
+                                    jugador2.Nombre = "Jugador 2";
+                                    contador = 2;
+                                    break;
+                                case "modalidad":
+                                    Session["J1"] = jugador1;
+                                    Session["J2"] = jugador2;
+                                    modalidad = reader.ReadString();
+                                    break;
+                                case "color":
+                                    //Colores Jugador1
+                                    if (contador == 1)
+                                    {
+                                        jugador1.ingresarColor(reader.ReadString());
+                                    }
+                                    //colores Jugador2
+                                    else if (contador==2)
+                                    {
+                                        jugador2.ingresarColor(reader.ReadString());
+                                    }
+                                    // Asignar turno siguiente
+                                    else if (contador == 3)
+                                    {
+                                        //Crear Partida
+                                        crear(Int16.Parse(filas),Int16.Parse(columnas));
+                                        String aux = reader.ReadString();
+                                        TableroXtreme partida = new TableroXtreme((Jugador)Session["J1"], (Jugador)Session["J2"], (int)Session["Fila"], (int)Session["Columna"],(String[,])Session["Temporal"],modalidad,aux);
+                                        Session["Partida"] = partida;
+                                        Response.Redirect("OthelloXtreme.aspx");
+
+                                    }
+                                    //colores fichas
+                                    else
+                                    {
+                                        color = reader.ReadString();
+                                    }
+                                    break;
+                                case "ficha":
+                                    contador = 4;
+                                    break;
+                                case "fila":
+                                    fila =reader.ReadString();
+                                    String[,] temp = (String[,])Session["Temporal"];
+                                    temp[Int16.Parse(fila) - 1, numeroColumna(columna) - 1] = color;
+                                    Session["Temporal"] = temp;
+                                    break;
+                                case "columna":
+                                    columna = reader.ReadString();
+                                    break;
+                                case "siguientetiro":
+                                    contador = 3;
+                                    break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+
+                }
+            }
+        }
